@@ -4,15 +4,24 @@
  * @description Particle Swarm
  */
 
-export class ParticleSwarmOptimization {
+import { ConstraintManager } from "./constraint";
+import { Variables } from "./declare";
 
-    public static create(): ParticleSwarmOptimization {
+export class ParticleSwarmOptimization<T extends Variables> {
 
-        return new ParticleSwarmOptimization();
+    public static create<T extends Variables>(): ParticleSwarmOptimization<T> {
+
+        return new ParticleSwarmOptimization<T>();
     }
+
+    private readonly _constraints: ConstraintManager<T>;
 
     private constructor() {
 
-        // TODO
+        this._constraints = ConstraintManager.create<T>();
+    }
+
+    public get constraints(): ConstraintManager<T> {
+        return this._constraints;
     }
 }
