@@ -6,6 +6,7 @@
 
 import { ConstraintManager } from "./constraint";
 import { Variables } from "./declare";
+import { createVelocitiesByExample } from "./util";
 
 export type ParticleSwarmOptimizationOptions<T> = {
 
@@ -39,12 +40,14 @@ export class ParticleSwarmOptimization<T extends Variables> {
     public findMinimum(): number {
 
         const particles: T[] = new Array(this._options.particles).fill(undefined).map(this._options.initialization);
+        const velocities: T[] = createVelocitiesByExample(this._options.initialization(), this._options.particles);
 
         let globalBest: number = Infinity;
 
         for (let i = 0; i < this._options.iterations; i++) {
 
-
         }
+
+        return 0;
     }
 }
