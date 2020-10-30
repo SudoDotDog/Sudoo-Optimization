@@ -30,7 +30,7 @@ export class ConstraintManager<T extends Variables> {
         return this;
     }
 
-    public execute(variables: T): boolean {
+    public verify(variables: T): boolean {
 
         for (const each of this._constraints) {
 

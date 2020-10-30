@@ -16,7 +16,9 @@ describe('Given {ParticleSwarmOptimization} Class', (): void => {
 
     it('should be able to construct', (): void => {
 
-        const PSO: ParticleSwarmOptimization = ParticleSwarmOptimization.create();
+        const PSO: ParticleSwarmOptimization<any> = ParticleSwarmOptimization.create({
+            iterations: 10,
+        });
 
         expect(PSO).to.be.instanceOf(ParticleSwarmOptimization);
     });
