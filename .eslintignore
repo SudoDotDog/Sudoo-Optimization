@@ -1,0 +1,13 @@
+# Dependencies
+node_modules
+
+# Build
+dist
+app
+coverage
+
+# Script
+script
+
+# Mock
+test/mock
