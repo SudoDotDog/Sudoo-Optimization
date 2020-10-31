@@ -20,9 +20,12 @@ export type ParticleSwarmOptimizationOptions<T> = {
 export type ParticleSwarmOptimizationResult<T> = {
 
     readonly particles: T[];
-    readonly globalBest: number;
+
+    readonly globalBest: T;
+    readonly globalBestValue: number;
 
     readonly aliveParticleCount: number;
+    readonly diedParticleCount: number;
 };
 
 export class ParticleSwarmOptimization<T extends Variables> {
@@ -170,9 +173,12 @@ export class ParticleSwarmOptimization<T extends Variables> {
 
         return {
             particles,
-            globalBest: globalBestValue,
+
+            globalBest,
+            globalBestValue,
 
             aliveParticleCount: this._options.particles - disabledParticles.length,
+            diedParticleCount: disabledParticles.length,
         };
     }
 }
