@@ -47,6 +47,17 @@ export const createMinimumVariablesByExample = <T extends Variables>(variables: 
     return variableList;
 };
 
+export const createMaximumVariableByExample = <T extends Variables>(variables: T): T => {
+
+    const keys: Array<keyof T> = Object.keys(variables);
+    return keys.reduce((previous: Partial<T>, each: keyof T) => {
+        return {
+            ...previous,
+            [each]: Infinity,
+        };
+    }, {}) as T;
+};
+
 export const createMaximumVariablesByExample = <T extends Variables>(variables: T, count: number): T[] => {
 
     const keys: Array<keyof T> = Object.keys(variables);

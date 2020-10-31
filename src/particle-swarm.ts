@@ -6,7 +6,7 @@
 
 import { ConstraintManager } from "./constraint";
 import { Variables } from "./declare";
-import { createVelocitiesByExample, createVelocityByExample } from "./util";
+import { createMaximumVariableByExample, createMaximumVariablesByExample, createVelocitiesByExample, createVelocityByExample } from "./util";
 
 export type ParticleSwarmOptimizationOptions<T> = {
 
@@ -21,6 +21,8 @@ export type ParticleSwarmOptimizationResult<T> = {
 
     readonly particles: T[];
     readonly globalBest: number;
+
+    readonly aliveParticleCount: number;
 };
 
 export class ParticleSwarmOptimization<T extends Variables> {
@@ -48,34 +50,70 @@ export class ParticleSwarmOptimization<T extends Variables> {
         const count: number = this._options.particles;
         const example: T = this._options.initialization();
 
+        const disabledParticles: number[] = [];
+
         const particles: T[] = new Array(count).fill(undefined).map(this._options.initialization);
+
         const velocities: T[] = createVelocitiesByExample(example, count);
 
-        let globalBest: number = Infinity;
-        const particleBests: number[] = new Array(count).fill(Infinity);
+        let globalBest: T = createMaximumVariableByExample(example);
+        let globalBestValue: number = Infinity;
+
+        const particleBests: T[] = createMaximumVariablesByExample(example, count);
+        const particleBestValues: number[] = new Array(count).fill(Infinity);
 
         for (let iteration = 0; iteration < this._options.iterations; iteration++) {
 
             const currentValues: number[] = new Array(count);
 
-            for (let particleIndex = 0; particleIndex < count; particleIndex++) {
+            valueUpdate: for (let particleIndex = 0; particleIndex < count; particleIndex++) {
 
-                const value: number = this._options.function(particles[particleIndex]);
+                if (disabledParticles.includes(particleIndex)) {
+                    continue valueUpdate;
+                }
+
+                const currentParticle: T = particles[particleIndex];
+                if (!this._constraints.verify(currentParticle)) {
+
+                    disabledParticles.push(particleIndex);
+                    continue valueUpdate;
+                }
+
+                const value: number = this._options.function(currentParticle);
 
                 if (isNaN(value)) {
                     throw new Error('[Sudoo-Optimization] Invalid Result');
                 }
 
                 currentValues[particleIndex] = value;
-                particleBests[particleIndex] = Math.min(value, particleBests[particleIndex]);
+
+                if (value < particleBestValues[particleIndex]) {
+                    particleBests[particleIndex] = currentParticle;
+                    particleBestValues[particleIndex] = value;
+                }
             }
 
-            globalBest = Math.min(...particleBests);
+            bestUpdate: for (let particleIndex = 0; particleIndex < count; particleIndex++) {
 
-            for (let velocityIndex = 0; velocityIndex < count; velocityIndex++) {
+                if (disabledParticles.includes(particleIndex)) {
+                    continue bestUpdate;
+                }
+
+                if (particleBestValues[particleIndex] < globalBestValue) {
+
+                    globalBest = particleBests[particleIndex];
+                    globalBestValue = particleBestValues[particleIndex];
+                }
+            }
+
+            velocityUpdate: for (let velocityIndex = 0; velocityIndex < count; velocityIndex++) {
+
+                if (disabledParticles.includes(velocityIndex)) {
+                    continue velocityUpdate;
+                }
 
                 const currentParticle: T = particles[velocityIndex];
-                const currentParticleBest: number = particleBests[velocityIndex];
+                const currentParticleBest: T = particleBests[velocityIndex];
 
                 const previousVelocity: T = velocities[velocityIndex];
                 const nextVelocity: T = createVelocityByExample(example);
@@ -89,14 +127,17 @@ export class ParticleSwarmOptimization<T extends Variables> {
                     // eslint-disable-next-line @typescript-eslint/no-magic-numbers
                     const R2: number = Math.max(0.95, Math.min(0.05, Math.random()));
 
-                    nextVelocity[key] = previousVelocity[key] + (R1 * 2 * (currentParticleBest - currentParticle[key])) + (R2 * 2 * (globalBest - currentParticle[key])) as any;
-
+                    nextVelocity[key] = previousVelocity[key] + (R1 * 2 * (currentParticleBest[key] - currentParticle[key])) + (R2 * 2 * (globalBest[key] - currentParticle[key])) as any;
                 }
 
                 velocities[velocityIndex] = nextVelocity;
             }
 
-            for (let particleIndex = 0; particleIndex < count; particleIndex++) {
+            particleUpdate: for (let particleIndex = 0; particleIndex < count; particleIndex++) {
+
+                if (disabledParticles.includes(particleIndex)) {
+                    continue particleUpdate;
+                }
 
                 const currentVelocity: T = velocities[particleIndex];
 
@@ -112,10 +153,24 @@ export class ParticleSwarmOptimization<T extends Variables> {
             }
         }
 
-        globalBest = Math.min(...particleBests);
+        bestUpdate: for (let particleIndex = 0; particleIndex < count; particleIndex++) {
+
+            if (disabledParticles.includes(particleIndex)) {
+                continue bestUpdate;
+            }
+
+            if (particleBestValues[particleIndex] < globalBestValue) {
+
+                globalBest = particleBests[particleIndex];
+                globalBestValue = particleBestValues[particleIndex];
+            }
+        }
+
         return {
             particles,
-            globalBest,
+            globalBest: globalBestValue,
+
+            aliveParticleCount: this._options.particles - disabledParticles.length,
         };
     }
 }
