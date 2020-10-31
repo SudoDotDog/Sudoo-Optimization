@@ -127,7 +127,9 @@ export class ParticleSwarmOptimization<T extends Variables> {
                     // eslint-disable-next-line @typescript-eslint/no-magic-numbers
                     const R2: number = Math.max(0.95, Math.min(0.05, Math.random()));
 
-                    nextVelocity[key] = previousVelocity[key] + (R1 * 2 * (currentParticleBest[key] - currentParticle[key])) + (R2 * 2 * (globalBest[key] - currentParticle[key])) as any;
+                    nextVelocity[key] = previousVelocity[key]
+                        + (R1 * 2 * (currentParticleBest[key] - currentParticle[key]))
+                        + (R2 * 2 * (globalBest[key] - currentParticle[key])) as any;
                 }
 
                 velocities[velocityIndex] = nextVelocity;
