@@ -17,6 +17,12 @@ export type ParticleSwarmOptimizationOptions<T> = {
     readonly function: (variables: T) => number;
 };
 
+export type ParticleSwarmOptimizationResult<T> = {
+
+    readonly particles: T[];
+    readonly globalBest: number;
+};
+
 export class ParticleSwarmOptimization<T extends Variables> {
 
     public static create<T extends Variables>(options: ParticleSwarmOptimizationOptions<T>): ParticleSwarmOptimization<T> {
@@ -37,7 +43,7 @@ export class ParticleSwarmOptimization<T extends Variables> {
         return this._constraints;
     }
 
-    public findMinimum(): number {
+    public findMinimum(): ParticleSwarmOptimizationResult<T> {
 
         const count: number = this._options.particles;
         const example: T = this._options.initialization();
@@ -79,9 +85,9 @@ export class ParticleSwarmOptimization<T extends Variables> {
                 for (const key of keys) {
 
                     // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-                    const R1: number = Math.max(0.8, Math.min(0.2, Math.random()));
+                    const R1: number = Math.max(0.95, Math.min(0.05, Math.random()));
                     // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-                    const R2: number = Math.max(0.8, Math.min(0.2, Math.random()));
+                    const R2: number = Math.max(0.95, Math.min(0.05, Math.random()));
 
                     nextVelocity[key] = previousVelocity[key] + (R1 * 2 * (currentParticleBest - currentParticle[key])) + (R2 * 2 * (globalBest - currentParticle[key])) as any;
 
@@ -106,6 +112,10 @@ export class ParticleSwarmOptimization<T extends Variables> {
             }
         }
 
-        return globalBest;
+        globalBest = Math.min(...particleBests);
+        return {
+            particles,
+            globalBest,
+        };
     }
 }
