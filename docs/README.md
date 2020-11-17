@@ -14,3 +14,34 @@ yarn add @sudoo/optimization
 # Or
 npm install @sudoo/optimization --save
 ```
+
+## Usage
+
+```ts
+import { ParticleSwarmOptimization } from "@sudoo/optimization";
+
+type VarType = {
+    x: number;
+    y: number;
+    z: number;
+};
+
+const particleSwarm: ParticleSwarmOptimization<VarType> = ParticleSwarmOptimization.create(
+    {
+        particles: 49,
+        iterations: 7,
+        initialization: () => {
+            return {
+                x: initX(),
+                y: initY(),
+                z: initZ(),
+            };
+        },
+        function: (data: VarType) => {
+
+            return calculateResult(data.x, data.y, data.z);
+        },
+    },
+);
+const result: ParticleSwarmOptimizationResult<VarType> = particleSwarm.findMinimum(); // PSO result
+```

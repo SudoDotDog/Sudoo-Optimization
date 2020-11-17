@@ -4,6 +4,7 @@
  * @description Particle Swarm
  */
 
+import { BoundManager } from "./bound";
 import { ConstraintManager } from "./constraint";
 import { Variables } from "./declare";
 import { createMaximumVariableByExample, createMaximumVariablesByExample, createVelocitiesByExample, createVelocityByExample } from "./util";
@@ -36,14 +37,19 @@ export class ParticleSwarmOptimization<T extends Variables> {
     }
 
     private readonly _options: ParticleSwarmOptimizationOptions<T>;
+    private readonly _bounds: BoundManager<T>;
     private readonly _constraints: ConstraintManager<T>;
 
     private constructor(options: ParticleSwarmOptimizationOptions<T>) {
 
         this._options = options;
+        this._bounds = BoundManager.create<T>();
         this._constraints = ConstraintManager.create<T>();
     }
 
+    public get bounds(): BoundManager<T> {
+        return this._bounds;
+    }
     public get constraints(): ConstraintManager<T> {
         return this._constraints;
     }
