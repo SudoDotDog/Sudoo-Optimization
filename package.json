@@ -1,6 +1,6 @@
 {
   "name": "@sudoo/optimization",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": ":fire: Optimization Utils",
   "repository": {
     "type": "git",
@@ -17,7 +17,7 @@
   "homepage": "https://github.com/SudoDotDog/Sudoo-Optimization#readme",
   "devDependencies": {
     "@sudoo/io": "^1.8.0",
-    "@sudoo/triforce": "^2.9.6"
+    "@sudoo/triforce": "^2.9.7"
   },
   "nyc": {
     "extension": [

@@ -16,7 +16,26 @@ export type ParticleSwarmOptimizationOptions<T> = {
 
     readonly initialization: () => T;
     readonly function: (variables: T) => number;
+
+    readonly velocityMax?: number;
+    readonly velocityMin?: number;
+    readonly randomRangeMax?: number;
+    readonly randomRangeMin?: number;
+    readonly particleConfidence?: number;
+    readonly globalConfidence?: number;
+    readonly inertiaWeight?: number;
 };
+
+export type FixedParticleSwarmOptimizationOptions<T> = {
+
+    readonly velocityMax: number;
+    readonly velocityMin: number;
+    readonly randomRangeMax: number;
+    readonly randomRangeMin: number;
+    readonly particleConfidence: number;
+    readonly globalConfidence: number;
+    readonly inertiaWeight: number;
+} & ParticleSwarmOptimizationOptions<T>;
 
 export type ParticleSwarmOptimizationResult<T> = {
 
@@ -33,14 +52,25 @@ export class ParticleSwarmOptimization<T extends Variables> {
 
     public static create<T extends Variables>(options: ParticleSwarmOptimizationOptions<T>): ParticleSwarmOptimization<T> {
 
-        return new ParticleSwarmOptimization<T>(options);
+        const fixed: FixedParticleSwarmOptimizationOptions<T> = {
+
+            velocityMax: 3,
+            velocityMin: -3,
+            randomRangeMax: 0.95,
+            randomRangeMin: 0.05,
+            particleConfidence: 2,
+            globalConfidence: 2,
+            inertiaWeight: 0.79,
+            ...options,
+        };
+        return new ParticleSwarmOptimization<T>(fixed);
     }
 
-    private readonly _options: ParticleSwarmOptimizationOptions<T>;
+    private readonly _options: FixedParticleSwarmOptimizationOptions<T>;
     private readonly _bounds: BoundManager<T>;
     private readonly _constraints: ConstraintManager<T>;
 
-    private constructor(options: ParticleSwarmOptimizationOptions<T>) {
+    private constructor(options: FixedParticleSwarmOptimizationOptions<T>) {
 
         this._options = options;
         this._bounds = BoundManager.create<T>();
@@ -131,18 +161,15 @@ export class ParticleSwarmOptimization<T extends Variables> {
 
                 for (const key of keys) {
 
-                    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-                    const R1: number = Math.max(0.95, Math.min(0.05, Math.random()));
-                    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-                    const R2: number = Math.max(0.95, Math.min(0.05, Math.random()));
+                    const R1: number = Math.max(this._options.randomRangeMax, Math.min(this._options.randomRangeMin, Math.random()));
+                    const R2: number = Math.max(this._options.randomRangeMax, Math.min(this._options.randomRangeMin, Math.random()));
 
-                    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-                    nextVelocity[key] = (previousVelocity[key] * 0.79)
-                        + (R1 * 2 * (currentParticleBest[key] - currentParticle[key]))
-                        + (R2 * 2 * (globalBest[key] - currentParticle[key])) as any;
+                    nextVelocity[key] = (previousVelocity[key] * this._options.inertiaWeight)
+                        + (R1 * this._options.particleConfidence * (currentParticleBest[key] - currentParticle[key]))
+                        + (R2 * this._options.globalConfidence * (globalBest[key] - currentParticle[key])) as any;
 
-                    nextVelocity[key] = Math.min(3, nextVelocity[key]) as any;
-                    nextVelocity[key] = Math.max(-3, nextVelocity[key]) as any;
+                    nextVelocity[key] = Math.min(this._options.velocityMax, nextVelocity[key]) as any;
+                    nextVelocity[key] = Math.max(this._options.velocityMin, nextVelocity[key]) as any;
                 }
 
                 velocities[velocityIndex] = nextVelocity;
@@ -165,6 +192,16 @@ export class ParticleSwarmOptimization<T extends Variables> {
                         [key]: previous[key] + currentVelocity[key],
                     };
                 }, previousParticle);
+            }
+
+            valueFix: for (let particleIndex = 0; particleIndex < count; particleIndex++) {
+
+                if (disabledParticles.includes(particleIndex)) {
+                    continue valueFix;
+                }
+
+                const currentParticle: T = particles[particleIndex];
+                particles[particleIndex] = this._bounds.neutralize(currentParticle);
             }
         }
 
